@@ -202,6 +202,7 @@ READ_LOOP:
 		AND col, col, 31; \
 		QBNE col_##rN, col, 0; \
 		NOP; NOP; NOP; NOP; \
+		NOP; NOP; NOP; NOP; \
 
 		OUTPUT_COLUMN(r10); NOP; NOP;
 		OUTPUT_COLUMN(r11); NOP; NOP;
@@ -236,7 +237,7 @@ READ_LOOP:
 
 		// Be sure that we wait for the right length of time
 		// Force each line to be 54.4 usec
-		WAITNS(45200, wait_hsync_end)
+		WAITNS(45000, wait_hsync_end)
 
                 QBNE ROW_LOOP, row, 0
 		WAITNS(5000, wait_hsync_end2)
