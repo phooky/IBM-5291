@@ -45,7 +45,7 @@
 #define BE_PIN 1
 
 #define VSYNC_LO SBBO vsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
-#define VSYNC_HI SBBO vsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
+#define VSYNC_HI SBBO vsync_pin, gpio2_base, GPIO_SETDATAOUT, 4
 
 #define HSYNC_LO SBBO hsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
 #define HSYNC_HI SBBO hsync_pin, gpio2_base, GPIO_SETDATAOUT, 4
@@ -151,36 +151,37 @@ READ_LOOP:
 	LBBO sleep_counter, timer_ptr, 0xC, 4
 
 	// the hsync pulse starts a bit after the vsync
-	WAITNS(8000, wait_start)
+	//WAITNS(8000, wait_start)
 
-	// the hsync keeps running at normal speed for 1.2 ms
-	// 28 frames
-	MOV row, 29
+	// the hsync keeps running at normal speed for
+	// 15 frames
+	MOV row, 15
 	VSYNC_LOOP:
-		HSYNC_LO
-		WAITNS(21500, wait_hsync1)
 		HSYNC_HI
-		WAITNS(21500, wait_hsync2)
+		WAITNS(10000, wait_hsync1)
+		HSYNC_LO
+		WAITNS(44400, wait_hsync2)
 		SUB row, row, 1
 		QBNE hsync_skip, row, 25
-		VSYNC_HI
 		hsync_skip:
 		QBNE VSYNC_LOOP, row, 0
+	VSYNC_HI
 		
 
-        MOV row, 384
+        MOV row, 350
 
 	ROW_LOOP:
 		// start the new row
-		HSYNC_LO
+		HSYNC_HI
 
 		// Load the sixteen pixels worth of data outputs into
 		// This takes about 250 ns
 		LBBO pixel_data, data_addr, 0, 512/8
 
-		WAITNS(11200, wait_hsync)
+		WAITNS(9250, wait_hsync)
 		MOV col, 0
 
+                HSYNC_LO
 
 #define OUTPUT_COLUMN(rN) \
 		QBBC clr_##rN, rN, col; \
@@ -205,9 +206,7 @@ READ_LOOP:
 		OUTPUT_COLUMN(r10); NOP; NOP;
 		OUTPUT_COLUMN(r11); NOP; NOP;
 		OUTPUT_COLUMN(r12); NOP; NOP;
-		OUTPUT_COLUMN(r13);
-		HSYNC_HI
-
+		OUTPUT_COLUMN(r13); NOP; NOP;
 		OUTPUT_COLUMN(r14); NOP; NOP;
 		OUTPUT_COLUMN(r15); NOP; NOP;
 		OUTPUT_COLUMN(r16); NOP; NOP;
@@ -220,9 +219,9 @@ READ_LOOP:
 		OUTPUT_COLUMN(r23); NOP; NOP;
 		OUTPUT_COLUMN(r24); NOP; NOP;
 		OUTPUT_COLUMN(r25); NOP; NOP;
-
+		VIDEO_LO
 		// Always return the video pin to a high state
-		VIDEO_HI
+		// VIDEO_HI
 
 		// Increment our data_offset to point to the next row
 		ADD data_addr, data_addr, 512/8
@@ -236,8 +235,8 @@ READ_LOOP:
 */
 
 		// Be sure that we wait for the right length of time
-		// Force each line to be 50 usec
-		WAITNS(34000, wait_hsync_end)
+		// Force each line to be 54.4 usec
+		WAITNS(45200, wait_hsync_end)
 
                 QBNE ROW_LOOP, row, 0
 		WAITNS(5000, wait_hsync_end2)
