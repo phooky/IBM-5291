@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "pru.h"
 
-#define VRAM_WIDTH 512
+#define VRAM_WIDTH 640
 #define VRAM_HEIGHT 384
 
 void

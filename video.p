@@ -27,12 +27,9 @@
 #define data_addr r0
 #define row r1
 #define col r2
-#define video_pin r3
-#define hsync_pin r4
-#define vsync_pin r5
-#define gpio2_base r6
-#define timer_ptr r8
-#define pixel_data r10 // the next 16 registers, too
+#define gpio2_base r3
+#define timer_ptr r4
+#define pixel_data r5 // the next 20 registers, too
 #define tmp1 r28
 #define tmp2 r29
 
@@ -119,9 +116,6 @@ START:
 
     // Configure our output pins
     MOV gpio2_base, GPIO2
-    MOV video_pin, 1 << VIDEO_PIN
-    MOV hsync_pin, 1 << HSYNC_PIN
-    MOV vsync_pin, 1 << VSYNC_PIN
 
     GPIO_HI VIDEO_PIN
     GPIO_HI HSYNC_PIN
@@ -166,7 +160,7 @@ READ_LOOP:
 
 		// Load the sixteen pixels worth of data outputs into
 		// This takes about 250 ns
-		LBBO pixel_data, data_addr, 0, 512/8
+		LBBO pixel_data, data_addr, 0, 640/8
 
 		MOV col, 0
 
@@ -174,48 +168,34 @@ READ_LOOP:
 
                 GPIO_LO HSYNC_PIN
 
-#define OUTPUT_COLUMN(rN) \
-		MOV tmp1, 1<<VIDEO_PIN; \
-		QBBC clr_##rN, rN, col; \
-			sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4; \
-			QBA skip_##rN; \
-	col_##rN: ; \
-		NOP; \
-		NOP; \
-		NOP; NOP; NOP; NOP; \
-		QBBC clr_##rN, rN, col; \
-			sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4; \
-			QBA skip_##rN; \
-		clr_##rN:; \
-			NOP; \
-			sbbo tmp1, gpio2_base, GPIO_SETDATAOUT, 4; \
-		skip_##rN:; \
-		ADD col, col, 1; \
-		AND col, col, 31; \
-		QBNE col_##rN, col, 0; \
-		NOP; NOP; NOP; NOP; \
-		NOP; NOP; NOP; NOP; \
+#define OC(reg) \
+	MOV tmp2, reg; \
+	CALL OUTPUT_COLUMN; \
 
-		OUTPUT_COLUMN(r10); NOP; NOP;
-		OUTPUT_COLUMN(r11); NOP; NOP;
-		OUTPUT_COLUMN(r12); NOP; NOP;
-		OUTPUT_COLUMN(r13); NOP; NOP;
-		OUTPUT_COLUMN(r14); NOP; NOP;
-		OUTPUT_COLUMN(r15); NOP; NOP;
-		OUTPUT_COLUMN(r16); NOP; NOP;
-		OUTPUT_COLUMN(r17); NOP; NOP;
-		OUTPUT_COLUMN(r18); NOP; NOP;
-		OUTPUT_COLUMN(r19); NOP; NOP;
-		OUTPUT_COLUMN(r20); NOP; NOP;
-		OUTPUT_COLUMN(r21); NOP; NOP;
-		OUTPUT_COLUMN(r22); NOP; NOP;
-		OUTPUT_COLUMN(r23); NOP; NOP;
-		OUTPUT_COLUMN(r24); NOP; NOP;
-		OUTPUT_COLUMN(r25); NOP; NOP;
+		OC(r5)
+		OC(r6)
+		OC(r7)
+		OC(r8)
+		OC(r9)
+		OC(r10)
+		OC(r11)
+		OC(r12)
+		OC(r13)
+		OC(r14)
+		OC(r15)
+		OC(r16)
+		OC(r17)
+		OC(r18)
+		OC(r19)
+		OC(r20)
+		OC(r21)
+		OC(r22)
+		OC(r23)
+		OC(r24)
 		GPIO_LO VIDEO_PIN 
 
 		// Increment our data_offset to point to the next row
-		ADD data_addr, data_addr, 512/8
+		ADD data_addr, data_addr, 640/8
 
                 SUB row, row, 1
 
@@ -236,3 +216,26 @@ EXIT:
 #endif
 
     HALT
+
+// tmp2 is considered to be the output register
+OUTPUT_COLUMN:
+	MOV tmp1, 1<<VIDEO_PIN
+	QBBC clr_outbit, tmp2, col
+	sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4
+	QBA skip_outbit
+col_outbit:
+	NOP; NOP;
+	NOP; NOP; NOP; NOP;
+	QBBC clr_outbit, tmp2, col
+	sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4
+	QBA skip_outbit
+clr_outbit:
+	NOP
+	sbbo tmp1, gpio2_base, GPIO_SETDATAOUT, 4
+skip_outbit:
+	ADD col, col, 1
+	AND col, col, 31 
+	QBNE col_outbit, col, 0
+	NOP; NOP; NOP; NOP; 
+ret
+
