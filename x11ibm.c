@@ -14,7 +14,7 @@
 #include <X11/XWDFile.h>
 #include "pru.h"
 
-#define VRAM_WIDTH 512
+#define VRAM_WIDTH 640
 #define VRAM_HEIGHT 384
 
 static uint8_t threshold = 0x80;
@@ -116,7 +116,7 @@ main(
 	const uintptr_t fb1_ddr = pru->ddr_addr + 0 * fb_size;
 	const uintptr_t fb2_ddr = pru->ddr_addr + 1 * fb_size;
 
-	pru_exec(pru, "./macvideo.bin");
+	pru_exec(pru, "./video.bin");
 	printf("pru %p\n", pru);
 	printf("cmd %p\n", pru_cmd);
 	printf("ddr %p (%08x)\n", vram, pru->ddr_addr);

@@ -40,13 +40,16 @@
 #define BC_PIN 4
 #define BE_PIN 1
 
-.macro GPIO_LO
+/*** IMPORTANT: All outputs are fed through inverters!
+     Thus LO and HI are reversed here.
+***/
+.macro GPIO_HI
 .mparam pin
 	mov tmp1, 1<<pin
 	sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4
 .endm
 
-.macro GPIO_HI
+.macro GPIO_LO
 .mparam pin
 	mov tmp1, 1<<pin
 	sbbo tmp1, gpio2_base, GPIO_SETDATAOUT, 4

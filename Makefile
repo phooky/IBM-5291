@@ -3,7 +3,7 @@
 # The top level targets link in the two .o files for now.
 #
 TARGETS += video
-#TARGETS += x11mac
+TARGETS += x11ibm
 #TARGETS += eventmap
 LEDSCAPE_DIR ?= ../LEDscape
 
