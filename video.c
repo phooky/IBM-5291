@@ -79,7 +79,7 @@ int main(void)
 		for (int x = 0 ; x < VRAM_WIDTH ; x++)
 		{
 			// Make a checkerboard
-			vram_set(vram, x, y, ((x^y) >> 0) & 1);
+			vram_set(vram, x, y, ((x^y) >> 2) & 1);
 		}
 	}
 

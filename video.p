@@ -43,19 +43,22 @@
 #define BC_PIN 4
 #define BE_PIN 1
 
-#define VSYNC_LO SBBO vsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
-#define VSYNC_HI SBBO vsync_pin, gpio2_base, GPIO_SETDATAOUT, 4
+.macro GPIO_LO
+.mparam pin
+	mov tmp1, 1<<pin
+	sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4
+.endm
 
-#define HSYNC_LO SBBO hsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
-#define HSYNC_HI SBBO hsync_pin, gpio2_base, GPIO_SETDATAOUT, 4
-
-#define VIDEO_LO SBBO video_pin, gpio2_base, GPIO_CLRDATAOUT, 4
-#define VIDEO_HI SBBO video_pin, gpio2_base, GPIO_SETDATAOUT, 4
-
+.macro GPIO_HI
+.mparam pin
+	mov tmp1, 1<<pin
+	sbbo tmp1, gpio2_base, GPIO_SETDATAOUT, 4
+.endm
+	
 #define NOP ADD r0, r0, 0
 
-#define DATA_ROWS 350
-#define RETRACE_ROWS 15
+#define DATA_ROWS 340
+#define RETRACE_ROWS 14
 
 /** Reset the cycle counter. Should be invoked once at the start
     of each row.
@@ -67,7 +70,7 @@
 	CLR tmp2, tmp2, 3 // disable counter bit
 	SBBO tmp2, timer_ptr, 0, 4 // write it back
 
-	MOV r10, 0
+	MOV r10, 20 // 20: compensate for cycles in macro
 	SBBO r10, timer_ptr, 0xC, 4 // clear the timer
 
 	SET tmp2, tmp2, 3 // enable counter bit
@@ -120,9 +123,9 @@ START:
     MOV hsync_pin, 1 << HSYNC_PIN
     MOV vsync_pin, 1 << VSYNC_PIN
 
-    VIDEO_HI
-    HSYNC_HI
-    VSYNC_HI
+    GPIO_HI VIDEO_PIN
+    GPIO_HI HSYNC_PIN
+    GPIO_HI VSYNC_PIN
 
     // Wait for the start condition from the main program to indicate
     // that we have a rendered frame ready to clock out.  This also
@@ -139,27 +142,27 @@ READ_LOOP:
         // Command of 0xFF is the signal to exit
         QBEQ EXIT, data_addr, #0xFF
 
-	VSYNC_LO
+	GPIO_LO VSYNC_PIN
 
 	// the hsync keeps running at normal speed for
 	// 15 frames
 	MOV row, RETRACE_ROWS
 	VSYNC_LOOP:
                 resetcounter
-		HSYNC_HI
+		GPIO_HI HSYNC_PIN
 		waitforns 10000
-		HSYNC_LO
+		GPIO_LO HSYNC_PIN
 		waitforns 54400
 		SUB row, row, 1
 		QBNE VSYNC_LOOP, row, 0
-	VSYNC_HI
+	GPIO_HI VSYNC_PIN
 		
         MOV row, DATA_ROWS
 
 	ROW_LOOP:
                 resetcounter
 		// start the new row
-		HSYNC_HI
+		GPIO_HI HSYNC_PIN
 
 		// Load the sixteen pixels worth of data outputs into
 		// This takes about 250 ns
@@ -169,22 +172,23 @@ READ_LOOP:
 
 		waitforns 10000
 
-                HSYNC_LO
+                GPIO_LO HSYNC_PIN
 
 #define OUTPUT_COLUMN(rN) \
+		MOV tmp1, 1<<VIDEO_PIN; \
 		QBBC clr_##rN, rN, col; \
-			VIDEO_LO; \
+			sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4; \
 			QBA skip_##rN; \
 	col_##rN: ; \
 		NOP; \
 		NOP; \
 		NOP; NOP; NOP; NOP; \
 		QBBC clr_##rN, rN, col; \
-			VIDEO_LO; \
+			sbbo tmp1, gpio2_base, GPIO_CLRDATAOUT, 4; \
 			QBA skip_##rN; \
 		clr_##rN:; \
 			NOP; \
-			VIDEO_HI; \
+			sbbo tmp1, gpio2_base, GPIO_SETDATAOUT, 4; \
 		skip_##rN:; \
 		ADD col, col, 1; \
 		AND col, col, 31; \
@@ -208,9 +212,7 @@ READ_LOOP:
 		OUTPUT_COLUMN(r23); NOP; NOP;
 		OUTPUT_COLUMN(r24); NOP; NOP;
 		OUTPUT_COLUMN(r25); NOP; NOP;
-		VIDEO_LO
-		// Always return the video pin to a high state
-		// VIDEO_HI
+		GPIO_LO VIDEO_PIN 
 
 		// Increment our data_offset to point to the next row
 		ADD data_addr, data_addr, 512/8
