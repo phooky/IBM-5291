@@ -10,6 +10,7 @@
 .origin 0
 .entrypoint START
 
+#include "ws281x.hp"
 /** Mappings of the GPIO devices */
 #define GPIO0 (0x44E07000 + 0x100)
 #define GPIO1 (0x4804c000 + 0x100)
@@ -29,7 +30,7 @@
 #define video_pin r3
 #define hsync_pin r4
 #define vsync_pin r5
-#define gpio0_base r6
+#define gpio2_base r6
 #define sleep_counter r7 // how long to wait
 #define timer_ptr r8
 #define pixel_data r10 // the next 16 registers, too
