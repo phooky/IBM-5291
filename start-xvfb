@@ -1,4 +1,6 @@
 #!/bin/sh
+echo BB-BONE-PRU-01 > /sys/devices/bone_capemgr.9/slots 
+modprobe uio_pruss
 killall Xvfb x11ibm eventmap
 
 Xvfb \
@@ -14,7 +16,6 @@ sleep 5
 export DISPLAY=:0
 
 xterm -fg white -bg black -geometry +10+10 &
-xeyes -geometry -0-0 &
 
 ./x11ibm /tmp/Xvfb_screen0 &
 ./eventmap /dev/ttyACM0 &
