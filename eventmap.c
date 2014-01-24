@@ -192,14 +192,18 @@ read_one(
                 int key = keymap[button];
                 if (key != 0)
 		{
+		if (dpy) {
                   KeyCode code = XKeysymToKeycode(dpy, key);
                   XTestFakeKeyEvent(dpy, code, is_press, 0);
                    	//FakeKeyEvent(dpy, key, is_press, 0);
+		} else {
+			printf("Button %d Keysym %d (%c) press %d\n",button,key,key,is_press);
+		}
 		}
                 else
                   printf("EV_KEY code=%d->%d unhandled\n", ev->code, key);
         }
-	XFlush(dpy);
+	if (dpy) XFlush(dpy);
 }
 
 
@@ -209,9 +213,6 @@ main(
 	char ** argv
 )
 {
-	dpy = XOpenDisplay(NULL);
-	if (!dpy)
-		die("Unable to open display\n");
 	
 	const int num_fds = argc - 1;
 	int * fds = calloc(sizeof(*fds), num_fds);
@@ -228,6 +229,12 @@ main(
 		printf("%s (fd %d)\n", devname, fd);
 		if (fd > max_fd)
 			max_fd = fd;
+	}
+	dpy = XOpenDisplay(NULL);
+	if (!dpy)
+	{
+		// test mode
+		//	die("Unable to open display\n");
 	}
 
 	while (1)
