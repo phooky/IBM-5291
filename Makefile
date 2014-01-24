@@ -4,7 +4,7 @@
 #
 TARGETS += video
 TARGETS += x11ibm
-#TARGETS += eventmap
+TARGETS += eventmap
 LEDSCAPE_DIR ?= ../LEDscape
 
 eventmap.LDLIBS := \

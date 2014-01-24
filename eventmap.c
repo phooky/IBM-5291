@@ -8,7 +8,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <linux/input.h>
-//#include <X11/extensions/XTest.h>
+#include <X11/Xproto.h>
+#include <X11/extensions/XTest.h>
 #include <X11/Xlib.h>
 #include <unistd.h>
 #include <err.h>
@@ -368,7 +369,10 @@ read_one(
                 int is_press = ev->up;
                 int key = keymap[button];
                 if (key != 0)
-                  FakeKeyEvent(dpy, key, is_press, 0);
+		{
+			XTestFakeKeyEvent(dpy, key, is_press, 0);
+                   	//FakeKeyEvent(dpy, key, is_press, 0);
+		}
                 else
                   printf("EV_KEY code=%d->%d unhandled\n", ev->code, key);
         }
