@@ -13,7 +13,7 @@ sleep 5
 
 export DISPLAY=:0
 
-xterm -geometry +10+10 &
+xterm -fg white -bg black -geometry +10+10 &
 xeyes -geometry -0-0 &
 
 ./x11ibm /tmp/Xvfb_screen0 &
