@@ -11,6 +11,7 @@ Xvfb \
 	+extension XTEST \
 	&
 
+./video
 sleep 5
 
 export DISPLAY=:0
