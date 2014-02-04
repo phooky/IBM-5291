@@ -1,19 +1,13 @@
-Classic Mac CRT Interface
-=========================
+Pin assignments
+===============
 
-Mac 128/Plus/SE hardware interface using the BeagleBone Black PRU.
+All pins are on GPIO2.
 
-Run the virtual frame buffer:
-
-	Xvfb :0 -ac -screen 0 512x384x8 -fbdir /tmp/ -retro
-
-Start the X11 to Mac CRT translation:
-
-	./x11mac /tmp/Xvfb_screen0
-
-And start the mouse/keyboard event to X11 event translation:
-
-	./eventmap /dev/input/event*
-
-Problems?  hudson@trmm.net
+    BBB    GPIO   Function
+    ---    ----   --------
+    P8.7   2_2    Vertical
+    P8.8   2_3    Horizontal
+    P8.9   2_5    Video
+    P8.10  2_4    Brightness Center
+    P8.18  2_1    Brightness End
 

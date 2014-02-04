@@ -1,5 +1,5 @@
 // \file
- /* PRU based Mac 128/Plus/SE video driver.
+/* PRU based IBM 5291 video driver.
  *
  * The ARM writes a 1-bit color 512x384 bitmap into the shared RAM and the
  * PRU writes it to the video output continuously.
@@ -9,8 +9,6 @@
  */
 .origin 0
 .entrypoint START
-
-#include "ws281x.hp"
 
 /** Mappings of the GPIO devices */
 #define GPIO0 (0x44E07000 + 0x100)
@@ -38,19 +36,21 @@
 #define tmp1 r28
 #define tmp2 r29
 
-/** GPIO0 pin numbers for our outputs */
-#define VIDEO_PIN 23
-#define HSYNC_PIN 27
-#define VSYNC_PIN 22
+/** GPIO2 pin numbers for our outputs */
+#define VIDEO_PIN 5
+#define HSYNC_PIN 2
+#define VSYNC_PIN 3
+#define BC_PIN 4
+#define BE_PIN 1
 
-#define VSYNC_LO SBBO vsync_pin, gpio0_base, GPIO_CLRDATAOUT, 4
-#define VSYNC_HI SBBO vsync_pin, gpio0_base, GPIO_SETDATAOUT, 4
+#define VSYNC_LO SBBO vsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
+#define VSYNC_HI SBBO vsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
 
-#define HSYNC_LO SBBO hsync_pin, gpio0_base, GPIO_CLRDATAOUT, 4
-#define HSYNC_HI SBBO hsync_pin, gpio0_base, GPIO_SETDATAOUT, 4
+#define HSYNC_LO SBBO hsync_pin, gpio2_base, GPIO_CLRDATAOUT, 4
+#define HSYNC_HI SBBO hsync_pin, gpio2_base, GPIO_SETDATAOUT, 4
 
-#define VIDEO_LO SBBO video_pin, gpio0_base, GPIO_CLRDATAOUT, 4
-#define VIDEO_HI SBBO video_pin, gpio0_base, GPIO_SETDATAOUT, 4
+#define VIDEO_LO SBBO video_pin, gpio2_base, GPIO_CLRDATAOUT, 4
+#define VIDEO_HI SBBO video_pin, gpio2_base, GPIO_SETDATAOUT, 4
 
 #define NOP ADD r0, r0, 0
 
@@ -107,7 +107,7 @@ START:
     MOV timer_ptr, 0x22000 /* control register */
 
     // Configure our output pins
-    MOV gpio0_base, GPIO0
+    MOV gpio2_base, GPIO2
     MOV video_pin, 1 << VIDEO_PIN
     MOV hsync_pin, 1 << HSYNC_PIN
     MOV vsync_pin, 1 << VSYNC_PIN
