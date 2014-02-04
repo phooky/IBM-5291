@@ -4,14 +4,14 @@
 #
 TARGETS += macvideo
 TARGETS += x11mac
-TARGETS += eventmap
+#TARGETS += eventmap
 LEDSCAPE_DIR ?= ../LEDscape
 
 eventmap.LDLIBS := \
 	-lX11 \
 	-lXtst \
 
-all: $(TARGETS) macvideo.bin
+all: $(TARGETS) video.bin
 
 ifeq ($(shell uname -m),armv7l)
 # We are on the BeagleBone Black itself;

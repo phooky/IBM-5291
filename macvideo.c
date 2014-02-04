@@ -117,7 +117,7 @@ int main(void)
 	}
 #endif
 
-	pru_exec(pru, "./macvideo.bin");
+	pru_exec(pru, "./video.bin");
 	printf("pru %p\n", pru);
 	printf("cmd %p\n", pru_cmd);
 	printf("ddr %p (%08x)\n", vram, pru->ddr_addr);
