@@ -52,9 +52,11 @@ int main(void)
 	uint32_t * const pru_cmd = pru->data_ram;
 	uint8_t * const vram = pru->ddr;
 
-	pru_gpio(0, 22, 1, 1);
-	pru_gpio(0, 23, 1, 1);
-	pru_gpio(0, 27, 1, 1);
+	pru_gpio(2, 2, 1, 1);
+	pru_gpio(2, 3, 1, 0);
+	pru_gpio(2, 5, 1, 0);
+	pru_gpio(2, 4, 1, 0);
+	pru_gpio(2, 1, 1, 0);
 
 	memset(vram, 0x00, VRAM_WIDTH*VRAM_HEIGHT/8);
 
