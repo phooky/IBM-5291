@@ -31,7 +31,6 @@
 #define hsync_pin r4
 #define vsync_pin r5
 #define gpio2_base r6
-#define sleep_counter r7 // how long to wait
 #define timer_ptr r8
 #define pixel_data r10 // the next 16 registers, too
 #define tmp1 r28
@@ -55,28 +54,36 @@
 
 #define NOP ADD r0, r0, 0
 
-/** Wait for the cycle counter to reach a given value; we might
- * overshoot by a bit so we ensure that we always have the same
- * amount of overshoot.
- *
- * wake_time += ns;
- * while (now = read_timer()) < wake_time)
- *	;
- * if (now - wake_time < 1)
- *      nop()
- */
-#define WAITNS(ns,lab) \
-	MOV tmp1, (ns)/5; \
-	ADD sleep_counter, sleep_counter, tmp1; \
-lab: ; \
-	LBBO tmp2, timer_ptr, 0xC, 4; /* read the cycle counter */ \
-	QBGT lab, tmp2, sleep_counter; \
-	SUB tmp2, tmp2, sleep_counter; \
-	QBLT lab##_2, tmp2, 1; \
-	NOP; \
-lab##_2: ; \
+#define DATA_ROWS 350
+#define RETRACE_ROWS 15
 
+/** Reset the cycle counter. Should be invoked once at the start
+    of each row.
+*/
+.macro resetcounter
+	// Disable the counter and clear it, then re-enable it
+	// This starts our clock at the start of the row.
+	LBBO tmp2, timer_ptr, 0, 4
+	CLR tmp2, tmp2, 3 // disable counter bit
+	SBBO tmp2, timer_ptr, 0, 4 // write it back
 
+	MOV r10, 0
+	SBBO r10, timer_ptr, 0xC, 4 // clear the timer
+
+	SET tmp2, tmp2, 3 // enable counter bit
+	SBBO tmp2, timer_ptr, 0, 4 // write it back
+.endm
+
+/** Wait for the cycle counter to hit the given absolute value.
+    The counter is reset at the start of each row.
+*/
+.macro waitforns
+.mparam ns
+	MOV tmp1, (ns)/5;
+waitloop:
+	LBBO tmp2, timer_ptr, 0xC, 4; /* read the cycle counter */
+	QBGT waitloop, tmp2, tmp1;
+.endm
 
 START:
     // Enable OCP master port
@@ -134,43 +141,23 @@ READ_LOOP:
 
 	VSYNC_LO
 
-	// Disable the counter and clear it, then re-enable it
-	// This starts our clock at the start of the row.
-	LBBO tmp2, timer_ptr, 0, 4
-	CLR tmp2, tmp2, 3 // disable counter bit
-	SBBO tmp2, timer_ptr, 0, 4 // write it back
-
-	MOV r10, 0
-	SBBO r10, timer_ptr, 0xC, 4 // clear the timer
-
-	SET tmp2, tmp2, 3 // enable counter bit
-	SBBO tmp2, timer_ptr, 0, 4 // write it back
-
-	// Read the current counter value
-	// Should be zero.
-	LBBO sleep_counter, timer_ptr, 0xC, 4
-
-	// the hsync pulse starts a bit after the vsync
-	//WAITNS(8000, wait_start)
-
 	// the hsync keeps running at normal speed for
 	// 15 frames
-	MOV row, 15
+	MOV row, RETRACE_ROWS
 	VSYNC_LOOP:
+                resetcounter
 		HSYNC_HI
-		WAITNS(10000, wait_hsync1)
+		waitforns 10000
 		HSYNC_LO
-		WAITNS(44400, wait_hsync2)
+		waitforns 54400
 		SUB row, row, 1
-		QBNE hsync_skip, row, 25
-		hsync_skip:
 		QBNE VSYNC_LOOP, row, 0
 	VSYNC_HI
 		
-
-        MOV row, 350
+        MOV row, DATA_ROWS
 
 	ROW_LOOP:
+                resetcounter
 		// start the new row
 		HSYNC_HI
 
@@ -178,8 +165,9 @@ READ_LOOP:
 		// This takes about 250 ns
 		LBBO pixel_data, data_addr, 0, 512/8
 
-		WAITNS(9250, wait_hsync)
 		MOV col, 0
+
+		waitforns 10000
 
                 HSYNC_LO
 
@@ -229,18 +217,12 @@ READ_LOOP:
 
                 SUB row, row, 1
 
-/*
-		QBNE hold_vsync_lo, row, 150
-		VSYNC_HI
-		hold_vsync_lo:
-*/
-
 		// Be sure that we wait for the right length of time
 		// Force each line to be 54.4 usec
-		WAITNS(45000, wait_hsync_end)
+		waitforns 54400
 
                 QBNE ROW_LOOP, row, 0
-		WAITNS(5000, wait_hsync_end2)
+		// WAITNS(5000, wait_hsync_end2)
 	QBA READ_LOOP
 	
 EXIT:
