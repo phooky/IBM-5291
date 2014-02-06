@@ -43,7 +43,7 @@ vram_set(
 
 }
 
-#include "holly.xbm"
+#include "test.xbm"
 
 int main(void)
 {
@@ -60,7 +60,7 @@ int main(void)
 
 	memset(vram, 0x00, VRAM_WIDTH*VRAM_HEIGHT/8);
 
-#if 1
+#if 0
 	for (int y = 0 ; y < VRAM_HEIGHT/2 ; y++)
 	{
 		for (int x = 0 ; x < VRAM_WIDTH ; x++)
@@ -108,13 +108,13 @@ int main(void)
 
 	__asm__ __volatile__("dmb");
 #else
-	memcpy(vram, holly_bits, VRAM_WIDTH*VRAM_HEIGHT/8);
+	memcpy(vram, test_bits, VRAM_WIDTH*VRAM_HEIGHT/8);
 	for (int y = 0 ; y < VRAM_HEIGHT ; y++)
 	{
 		for (int x = 0 ; x < VRAM_WIDTH ; x++)
 		{
 			// invert the image
-			vram_set(vram, x, y, -1);
+			//vram_set(vram, x, y, -1);
 		}
 	}
 #endif
