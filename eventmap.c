@@ -8,13 +8,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <linux/input.h>
-#include <X11/extensions/XTest.h>
+//#include <X11/extensions/XTest.h>
 #include <X11/Xlib.h>
+#include <unistd.h>
+#include <err.h>
 
 #define XK_MISCELLANY
 #define XK_LATIN1
 #include <X11/keysymdef.h>
-#include "util.h"
+// #include "util.h"
 
 
 static Display * dpy;
@@ -308,6 +310,26 @@ static const int keymap[] = {
 #endif
 };
 
+void FakeKeyEvent(Display* dpy,unsigned int key, Bool is_press, unsigned long delay) {
+   Window root = XDefaultRootWindow(dpy);
+   Window focus;
+   int revert;
+   XGetInputFocus(dpy, &focus, &revert);
+   XKeyEvent event;
+   event.display = dpy;
+   event.window = focus;
+   event.root = root;
+   event.subwindow = None;
+   event.time = CurrentTime;
+   event.x = event.y = event.x_root = event.y_root = 1;
+   event.same_screen = True;
+   event.keycode = XKeysymToKeycode(dpy, key);
+   event.state = 0;
+   event.type = is_press?KeyPress:KeyRelease;
+   XSendEvent(event.display, event.window, True, KeyPressMask, (XEvent *)&event);
+}
+
+#define die warn
 
 static void
 read_one(
@@ -359,11 +381,11 @@ read_one(
 			if (button > 110)
 			{
 				button = (button & 0xF) + 1;
-				XTestFakeButtonEvent(dpy, button, is_press, 0);
+				//XTestFakeButtonEvent(dpy, button, is_press, 0);
 			} else {
 				int key = keymap[button];
 				if (key != 0)
-					XTestFakeKeyEvent(dpy, key, is_press, 0);
+					FakeKeyEvent(dpy, key, is_press, 0);
 				else
 					warn("EV_KEY code=%d->%d unhandled\n", ev->code, key);
 			}
@@ -378,7 +400,7 @@ read_one(
 	if (mouse_valid)
 	{
 		// no screen argument?
-		int rc = XTestFakeRelativeMotionEvent(dpy, mx, my, 0);
+		// int rc = XTestFakeRelativeMotionEvent(dpy, mx, my, 0);
 	}
 
 	XFlush(dpy);
