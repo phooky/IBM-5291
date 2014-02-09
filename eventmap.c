@@ -79,7 +79,7 @@ static const int keymap[255] = {
 	[46] = XK_backslash,
 	[47] = XK_braceright,
 	[48] = XK_Caps_Lock,
-	[49] = XK_XP_Multiply,
+	[49] = XK_KP_Multiply,
 
 	[50] = XK_Return,
 	[51] = XK_BackSpace,
