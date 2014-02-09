@@ -331,13 +331,19 @@ void FakeKeyEvent(Display* dpy,unsigned int key, Bool is_press, unsigned long de
 
 #define die warn
 
+typedef struct {
+  __u8 code;
+  __u8 up;
+} SimpleEvt;
+
 static void
 read_one(
 	int fd
 )
 {
+  printf("SELECTED\n");
 	const int max_evs = 8;
-	struct input_event evs[max_evs];
+	SimpleEvt evs[max_evs];
 	const ssize_t rlen = read(fd, evs, sizeof(evs));
 	if (rlen < 0)
 		die("read failed");
@@ -350,59 +356,21 @@ read_one(
 
 	for (int i = 0 ; i < num_ev ; i++)
 	{
-		const struct input_event * const ev = &evs[i];
-		if (0)
-			printf("%d: type=%02x code=%x val=%d\n",
-				i,
-				ev->type,
-				ev->code,
-				ev->value
-			);
+		const SimpleEvt * const ev = &evs[i];
+		//if (0)
+                printf("code=%x up=%d\n",
+                       ev->code,
+                       ev->up
+                       );
 
-		switch (ev->type)
-		{
-		case EV_SYN:
-		case EV_MSC:
-			break;
-		case EV_REL:
-			mouse_valid = 1;
-			if (ev->code == REL_X)
-				mx = ev->value;
-			else
-			if (ev->code == REL_Y)
-				my = ev->value;
-			else
-				warn("EV_REL code=%d unhandled\n", ev->code);
-			break;
-		case EV_KEY:
-		{
-			int button = ev->code;
-			int is_press = ev->value;
-			if (button > 110)
-			{
-				button = (button & 0xF) + 1;
-				//XTestFakeButtonEvent(dpy, button, is_press, 0);
-			} else {
-				int key = keymap[button];
-				if (key != 0)
-					FakeKeyEvent(dpy, key, is_press, 0);
-				else
-					warn("EV_KEY code=%d->%d unhandled\n", ev->code, key);
-			}
-			break;
-		}
-		default:
-			warn("type %d code=%d unhandled\n", ev->type, ev->code);
-			break;
-		}
-	}
-
-	if (mouse_valid)
-	{
-		// no screen argument?
-		// int rc = XTestFakeRelativeMotionEvent(dpy, mx, my, 0);
-	}
-
+                int button = ev->code;
+                int is_press = ev->up;
+                int key = keymap[button];
+                if (key != 0)
+                  FakeKeyEvent(dpy, key, is_press, 0);
+                else
+                  warn("EV_KEY code=%d->%d unhandled\n", ev->code, key);
+        }
 	XFlush(dpy);
 }
 
