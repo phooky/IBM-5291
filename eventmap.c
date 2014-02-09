@@ -192,7 +192,8 @@ read_one(
                 int key = keymap[button];
                 if (key != 0)
 		{
-			XTestFakeKeyEvent(dpy, key, is_press, 0);
+                  KeyCode code = XKeysymToKeycode(display, key);
+                  XTestFakeKeyEvent(dpy, code, is_press, 0);
                    	//FakeKeyEvent(dpy, key, is_press, 0);
 		}
                 else
