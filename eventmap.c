@@ -341,7 +341,7 @@ read_one(
 	int fd
 )
 {
-  printf("SELECTED\n");
+  //printf("SELECTED\n");
 	const int max_evs = 8;
 	SimpleEvt evs[max_evs];
 	const ssize_t rlen = read(fd, evs, sizeof(evs));
@@ -358,10 +358,10 @@ read_one(
 	{
 		const SimpleEvt * const ev = &evs[i];
 		//if (0)
-                printf("code=%x up=%d\n",
-                       ev->code,
-                       ev->up
-                       );
+                //printf("code=%x up=%d\n",
+                //       ev->code,
+                //       ev->up
+                //       );
 
                 int button = ev->code;
                 int is_press = ev->up;
@@ -369,7 +369,7 @@ read_one(
                 if (key != 0)
                   FakeKeyEvent(dpy, key, is_press, 0);
                 else
-                  warn("EV_KEY code=%d->%d unhandled\n", ev->code, key);
+                  printf("EV_KEY code=%d->%d unhandled\n", ev->code, key);
         }
 	XFlush(dpy);
 }
