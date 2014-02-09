@@ -312,9 +312,9 @@ static const int keymap[] = {
 
 void FakeKeyEvent(Display* dpy,unsigned int key, Bool is_press, unsigned long delay) {
    Window root = XDefaultRootWindow(dpy);
-   Window focus;
+   Window focus = 0;
    int revert;
-   XGetInputFocus(dpy, &focus, &revert);
+   //XGetInputFocus(dpy, &focus, &revert);
    XKeyEvent event;
    event.display = dpy;
    event.window = focus;
@@ -327,6 +327,7 @@ void FakeKeyEvent(Display* dpy,unsigned int key, Bool is_press, unsigned long de
    event.state = 0;
    event.type = is_press?KeyPress:KeyRelease;
    XSendEvent(event.display, event.window, True, KeyPressMask, (XEvent *)&event);
+   printf("event sent!\n");
 }
 
 #define die warn
