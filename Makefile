@@ -4,14 +4,15 @@
 #
 TARGETS += video
 TARGETS += x11ibm
-TARGETS += eventmap
 LEDSCAPE_DIR ?= ../LEDscape
 
 eventmap.LDLIBS := \
 	-lX11 \
 	-lXtst \
 
-all: $(TARGETS) video.bin
+all: $(TARGETS) eventmap video.bin
+
+
 
 ifeq ($(shell uname -m),armv7l)
 # We are on the BeagleBone Black itself;
@@ -45,6 +46,9 @@ LDFLAGS += \
 
 LDLIBS += \
 	-lpthread \
+
+eventmap: eventmap.c
+	gcc -std=c99 -Wall -o eventmap eventmap.c $(eventmap.LDLIBS)
 
 
 COMPILE.o = $(CROSS_COMPILE)gcc $(CFLAGS) -c -o $@ $< 
