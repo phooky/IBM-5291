@@ -4,6 +4,8 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -166,17 +168,13 @@ read_one(
 )
 {
   //printf("SELECTED\n");
-	const int max_evs = 8;
+	const int max_evs = 1;
 	SimpleEvt evs[max_evs];
 	const ssize_t rlen = read(fd, evs, sizeof(evs));
 	if (rlen < 0)
 		die("read failed");
 
 	const int num_ev = rlen / sizeof(*evs);
-
-	int mouse_valid = 0;
-	int mx = 0;
-	int my = 0;
 
 	for (int i = 0 ; i < num_ev ; i++)
 	{
@@ -190,8 +188,7 @@ read_one(
                 int button = ev->code;
                 int is_press = ev->up;
                 int key = keymap[button];
-                if (key != 0)
-		{
+                //if (key != 0) {
 		if (dpy) {
                   KeyCode code = XKeysymToKeycode(dpy, key);
                   XTestFakeKeyEvent(dpy, code, is_press, 0);
@@ -199,9 +196,9 @@ read_one(
 		} else {
 			printf("Button %d Keysym %d (%c) press %d\n",button,key,key,is_press);
 		}
-		}
-                else
-                  printf("EV_KEY code=%d->%d unhandled\n", ev->code, key);
+		//} else {
+                //  printf("EV_KEY code=%d->%d unhandled\n", ev->code, key);
+                // }
         }
 	if (dpy) XFlush(dpy);
 }
@@ -220,15 +217,20 @@ main(
 
 	for (int i = 0 ; i < num_fds ; i++)
 	{
-		const char * const devname = argv[i+1];
-		const int fd = open(devname, O_RDONLY, 0666);
-		if (fd < 0)
-			die("%s: failed to open\n", devname);
-		fds[i] = fd;
+          struct termios  tty;
+          const char * const devname = argv[i+1];
+          const int fd = open(devname, O_RDONLY, 0666);
+          if (fd < 0)
+            die("%s: failed to open\n", devname);
+          fds[i] = fd;
 
-		printf("%s (fd %d)\n", devname, fd);
-		if (fd > max_fd)
-			max_fd = fd;
+          tcgetattr(fd, &tty);
+          cfmakeraw(&tty);
+          tcsetattr(fd, TCSANOW, &tty);
+          
+          printf("%s (fd %d)\n", devname, fd);
+          if (fd > max_fd)
+            max_fd = fd;
 	}
 	dpy = XOpenDisplay(NULL);
 	if (!dpy)
@@ -239,6 +241,10 @@ main(
 
 	while (1)
 	{
+          // eh, just blocking read on the first
+          const int fd = fds[0];
+          read_one(fd);
+	  /*
 		fd_set read_fds;
 		FD_ZERO(&read_fds);
 		for (int i = 0 ; i < num_fds ; i++)
@@ -257,5 +263,6 @@ main(
 			if (FD_ISSET(fd, &read_fds))
 				read_one(fd);
 		}
+          */
 	}
 }
